@@ -10,13 +10,18 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Set;
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class CQLEditing {
+
+    public static Map<String, String> valueSetsToResolve;
+
     private JTextPane cqlInput;
     private JList<String> valueSetList;
     private JButton submitButton;
@@ -39,8 +44,10 @@ public class CQLEditing {
                     String[] arr = keys.toArray(new String[0]);
                     Arrays.sort(arr);
                     valueSetList.setListData(arr);
+                    submitButton.setEnabled(true);
                 } catch (BadLocationException | IOException t) {
                     valueSetList.setListData(new String[] {"Invalid CQL"});
+                    submitButton.setEnabled(false);
                 }
             }
 
@@ -51,8 +58,10 @@ public class CQLEditing {
                     String[] arr = keys.toArray(new String[0]);
                     Arrays.sort(arr);
                     valueSetList.setListData(arr);
+                    submitButton.setEnabled(true);
                 } catch (BadLocationException | IOException t) {
                     valueSetList.setListData(new String[] {"Invalid CQL"});
+                    submitButton.setEnabled(false);
                 }
             }
 
@@ -63,9 +72,26 @@ public class CQLEditing {
                     String[] arr = keys.toArray(new String[0]);
                     Arrays.sort(arr);
                     valueSetList.setListData(arr);
+                    submitButton.setEnabled(true);
                 } catch (BadLocationException | IOException t) {
                     valueSetList.setListData(new String[] {"Invalid CQL"});
+                    submitButton.setEnabled(false);
                 }
+            }
+        });
+        submitButton.addActionListener(e -> {
+            List<String> toKeep = valueSetList.getSelectedValuesList();
+            try {
+                Map<String, String> vals = parser.getValueSets(this.cqlInput.getDocument().getText(0, this.cqlInput.getDocument().getLength()));
+                valueSetsToResolve = new HashMap<>();
+                toKeep.forEach(s -> valueSetsToResolve.put(s, vals.get(s)));
+                synchronized (GUI.nextPhaseFlag) {
+                    GUI.nextPhaseFlag.set(true);
+                    GUI.nextPhaseFlag.notifyAll();
+                }
+            } catch (IOException | BadLocationException ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(null, "An error occurred, please check your console");
             }
         });
     }

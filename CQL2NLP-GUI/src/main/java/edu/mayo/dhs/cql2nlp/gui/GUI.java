@@ -6,6 +6,7 @@ import com.intellij.uiDesigner.core.GridLayoutManager;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -45,6 +46,7 @@ public class GUI extends JDialog {
         CQLEditing cqlPane = new CQLEditing();
         setContentPane(cqlPane.$$$getRootComponent$$$());
         holdForNextPhase();
+        Map<String, String> valueSetsToResolve = CQLEditing.valueSetsToResolve;
         NLPRuleSetGenerationProgress progressPane = new NLPRuleSetGenerationProgress();
         setContentPane(progressPane.$$$getRootComponent$$$());
         holdForNextPhase();
