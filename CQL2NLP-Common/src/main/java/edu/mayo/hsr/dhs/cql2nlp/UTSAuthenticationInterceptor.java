@@ -79,18 +79,7 @@ public class UTSAuthenticationInterceptor implements ClientHttpRequestIntercepto
         // Check if TGT is valid, if not refresh
         if (currTgt == null || tgtRefreshTime + TGT_VALID_LIMIT_MILLIS < System.currentTimeMillis()) {
             // Refresh TGT
-            try {
-                this.currTgt = "/" + this.tgtRestTemplate.postForObject("/", new HttpEntity<>(this.tgtReqBody, headers), String.class);
-                Matcher m = TGT_MATCH_PATTERN.matcher(this.currTgt);
-                if (m.find()) {
-                    // Used to handle UTS v1 auth endpoint only, others such as VSAC don't need to use this matcher
-                    this.currTgt = m.group();
-                    this.currTgt = this.currTgt.split("/")[this.currTgt.split("/").length - 1];
-                }
-                this.tgtRefreshTime = System.currentTimeMillis();
-            } catch (Throwable t) {
-                throw new IOException("Failed to authenticate against UTS TGT Service", t);
-            }
+            this.currTgt = getTgt();
         }
         if (this.currTgt.length() < 9) { // Blank TGT
             throw new IOException("Failed to authenticate against UTS TGT Service, Double Check Credentials");
@@ -112,5 +101,23 @@ public class UTSAuthenticationInterceptor implements ClientHttpRequestIntercepto
             }
         };
         return execution.execute(wrapper, body);
+    }
+
+    public String getTgt() throws IOException {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+            this.currTgt = "/" + this.tgtRestTemplate.postForObject("/", new HttpEntity<>(this.tgtReqBody, headers), String.class);
+            Matcher m = TGT_MATCH_PATTERN.matcher(this.currTgt);
+            if (m.find()) {
+                // Used to handle UTS v1 auth endpoint only, others such as VSAC don't need to use this matcher
+                this.currTgt = m.group();
+                this.currTgt = this.currTgt.split("/")[this.currTgt.split("/").length - 1];
+            }
+            this.tgtRefreshTime = System.currentTimeMillis();
+            return this.currTgt;
+        } catch (Throwable t) {
+            throw new IOException("Failed to authenticate against UTS TGT Service", t);
+        }
     }
 }

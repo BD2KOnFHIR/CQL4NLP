@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>edu.mayo.hsr.dhs</groupId>
+        <artifactId>CQL2NLP</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>CQL2NLP-GUI</artifactId>
+
+    <description>Provides a front-end editing component for the CQL2NLP processors</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>edu.mayo.hsr.dhs</groupId>
+            <artifactId>CQL2NLP-COMMON</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.intellij</groupId>
+            <artifactId>forms_rt</artifactId>
+            <version>7.0.3</version>
+        </dependency>
+    </dependencies>
+
+</project>

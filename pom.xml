@@ -10,8 +10,23 @@
 
     <packaging>pom</packaging>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>8</source>
+                    <target>8</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
     <modules>
         <module>CQL2NLP-Common</module>
+        <module>CQL2NLP-GUI</module>
+        <module>CQL2NLP-NLP2FHIR</module>
         <module>CQL2NLP-MedTagger</module>
     </modules>
 </project>

@@ -2,14 +2,11 @@ package edu.mayo.hsr.dhs.cql2nlp;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
-import org.apache.commons.io.input.ReaderInputStream;
 import org.cqframework.cql.gen.cqlLexer;
 import org.cqframework.cql.gen.cqlParser;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.StringBufferInputStream;
-import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
