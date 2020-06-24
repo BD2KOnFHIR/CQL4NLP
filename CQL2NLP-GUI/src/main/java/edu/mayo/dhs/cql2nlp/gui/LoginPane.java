@@ -9,11 +9,10 @@ import org.springframework.http.MediaType;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
 import java.io.IOException;
 
-public class LoginPane {
+public class LoginPane extends JDialog {
     private JTextField userInput;
     private JPasswordField passwordInput;
     private JButton loginButton;
@@ -21,18 +20,37 @@ public class LoginPane {
     private JLabel authFailed;
 
     public LoginPane() {
+        setContentPane(contentPanel);
+        setModal(true);
+
+        // call onCancel() when cross is clicked
+        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+        addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent e) {
+                System.exit(0);
+            }
+        });
+
+        // call onCancel() on ESCAPE
+        contentPanel.registerKeyboardAction(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                System.exit(0);
+            }
+        }, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+
         loginButton.addActionListener(e -> {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
             GUI.utsUser = userInput.getText();
             GUI.utsPass = passwordInput.getPassword();
-            UTSAuthenticationInterceptor interceptor = new UTSAuthenticationInterceptor(GUI.utsUser, new String(GUI.utsPass));
+            UTSAuthenticationInterceptor interceptor = new UTSAuthenticationInterceptor("https://utslogin.nlm.nih.gov/cas/v1/tickets", GUI.utsUser, new String(GUI.utsPass));
             try {
                 interceptor.getTgt();
                 synchronized (GUI.nextPhaseFlag) {
                     GUI.nextPhaseFlag.set(true);
                     GUI.nextPhaseFlag.notifyAll();
                 }
+                dispose();
             } catch (IOException t) {
                 authFailed.setVisible(true);
             }

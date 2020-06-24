@@ -37,23 +37,6 @@ public class GUI extends JDialog {
                 onCancel();
             }
         }, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
-
-
-        // Now, first start with a login pane
-        LoginPane loginPane = new LoginPane();
-        setContentPane(loginPane.$$$getRootComponent$$$());
-        holdForNextPhase();
-        CQLEditing cqlPane = new CQLEditing();
-        setContentPane(cqlPane.$$$getRootComponent$$$());
-        holdForNextPhase();
-        Map<String, String> valueSetsToResolve = CQLEditing.valueSetsToResolve;
-        NLPRuleSetGenerationProgress progressPane = new NLPRuleSetGenerationProgress();
-        setContentPane(progressPane.$$$getRootComponent$$$());
-        holdForNextPhase();
-        NLPRulesetEditor editor = new NLPRulesetEditor();
-        setContentPane(editor.$$$getRootComponent$$$());
-        holdForNextPhase();
-        System.exit(0);
     }
 
     // Utility method that locks execution thread until sub-phase is complete by setting nextPhaseFlag to true
@@ -82,8 +65,23 @@ public class GUI extends JDialog {
 
     public static void main(String[] args) {
         GUI dialog = new GUI();
-        dialog.pack();
-        dialog.setVisible(true);
+        // Now, first start with a login pane
+        LoginPane loginPane = new LoginPane();
+        loginPane.pack();
+        loginPane.setVisible(true);
+        dialog.holdForNextPhase();
+        CQLEditing cqlPane = new CQLEditing();
+        cqlPane.pack();
+        cqlPane.setVisible(true);
+        dialog.holdForNextPhase();
+        NLPRuleSetGenerationProgress progressPane = new NLPRuleSetGenerationProgress();
+        progressPane.pack();
+        progressPane.setVisible(true);
+        dialog.holdForNextPhase();
+        NLPRulesetEditor editor = new NLPRulesetEditor();
+        editor.pack();
+        editor.setVisible(true);
+        dialog.holdForNextPhase();
         System.exit(0);
     }
 
