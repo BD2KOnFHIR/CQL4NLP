@@ -3,13 +3,18 @@ package edu.mayo.hsr.dhs.cql2nlp;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import edu.mayo.hsr.dhs.cql2nlp.structs.CodifiedValueSetElement;
-import edu.mayo.hsr.dhs.cql2nlp.structs.UMLSSourceVocabulary;
 import edu.mayo.hsr.dhs.cql2nlp.structs.VSACCodeSystem;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Handles usage of the UMLS metathesaurus REST service
@@ -17,6 +22,33 @@ import java.util.*;
 public class UMLSBrowser {
 
     private final ThreadLocal<RestTemplate> utsRest;
+    private final ThreadLocal<ObjectMapper> om = ThreadLocal.withInitial(ObjectMapper::new);
+    private final LoadingCache<CodifiedValueSetElement, JsonNode> cuiRlnCache =
+            CacheBuilder
+                    .newBuilder()
+                    .maximumSize(10000)
+                    .expireAfterAccess(5, TimeUnit.MINUTES)
+                    .build(new CacheLoader<CodifiedValueSetElement, JsonNode>() {
+                        @Override
+                        public JsonNode load(CodifiedValueSetElement code) throws Exception {
+                            try {
+                                return om.get().readTree(utsRest.get().getForObject("/content/current/CUI/" + code.getCode() + "/relations", String.class));
+                            } catch (Throwable t) {
+                                return JsonNodeFactory.instance.objectNode();
+                            }
+                        }
+                    });
+    private final LoadingCache<String, Set<String>> displayNameCache =
+            CacheBuilder
+                    .newBuilder()
+                    .maximumSize(10000)
+                    .expireAfterAccess(5, TimeUnit.MINUTES)
+                    .build(new CacheLoader<String, Set<String>>() {
+                        @Override
+                        public Set<String> load(String cui) throws Exception {
+                            return resolveDisplayNamesForCUI(cui);
+                        }
+                    });
 
     public UMLSBrowser(String utsAcct, String utsPass) {
         this.utsRest = ThreadLocal.withInitial(() -> {
@@ -71,13 +103,12 @@ public class UMLSBrowser {
         // not yet been visited (newCUIsThisIteration/not in ret already)
         if (traverseHierarchy) {
             for (CodifiedValueSetElement code : newCUIsThisIteration) {
-                String resp = null;
+                JsonNode json;
                 try {
-                    resp = this.utsRest.get().getForObject("/content/current/CUI/" + code.getCode() + "/relations", String.class);
-                } catch (Throwable t) {
+                    json = cuiRlnCache.get(code);
+                } catch (ExecutionException e) {
                     continue;
                 }
-                JsonNode json = new ObjectMapper().readTree(resp);
                 if (json.has("result")) {
                     for (JsonNode result : json.get("result")) {
                         String relnType = result.get("relationLabel").asText();
@@ -97,6 +128,14 @@ public class UMLSBrowser {
     }
 
     public Set<String> getDisplayNamesForCUI(String cui) throws JsonProcessingException {
+        try {
+            return displayNameCache.get(cui);
+        } catch (ExecutionException e) {
+            return Collections.emptySet();
+        }
+    }
+
+    public Set<String> resolveDisplayNamesForCUI(String cui) throws JsonProcessingException {
         Set<String> ret = new HashSet<>();
         ObjectMapper om = new ObjectMapper();
         String uriTemplate = "/content/current/CUI/" + cui + "/atoms?language={lang}&pageNumber={page}";
@@ -124,6 +163,5 @@ public class UMLSBrowser {
             uriVars.put("page", pageNum + "");
         }
         return ret;
-
     }
 }

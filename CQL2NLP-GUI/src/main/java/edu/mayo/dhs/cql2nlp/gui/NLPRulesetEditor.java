@@ -75,6 +75,10 @@ public class NLPRulesetEditor extends JDialog {
             ObjectWriter ow = new ObjectMapper().writerWithDefaultPrettyPrinter();
             try {
                 ow.writeValue(new File("nlp_export.json"), rulesets);
+                synchronized (GUI.nextPhaseFlag) {
+                    GUI.nextPhaseFlag.set(true);
+                    GUI.nextPhaseFlag.notifyAll();
+                }
                 dispose();
             } catch (IOException ioException) {
                 ioException.printStackTrace();

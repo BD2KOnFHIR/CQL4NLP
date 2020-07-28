@@ -1,17 +1,21 @@
 package edu.mayo.dhs.cql2nlp.gui;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import edu.mayo.hsr.dhs.cql2nlp.UMLSBrowser;
 import edu.mayo.hsr.dhs.cql2nlp.ValueSetResolver;
 import edu.mayo.hsr.dhs.cql2nlp.structs.CodifiedValueSetElement;
+import edu.mayo.hsr.dhs.cql2nlp.structs.VSACCodeSystem;
 import org.hl7.fhir.r4.model.ValueSet;
 
 import javax.swing.*;
 import javax.swing.text.BadLocationException;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -19,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 
 public class NLPRuleSetGenerationProgress extends JDialog {
 
@@ -49,6 +54,7 @@ public class NLPRuleSetGenerationProgress extends JDialog {
         ValueSetResolver rls = new ValueSetResolver(GUI.utsUser, new String(GUI.utsPass));
         UMLSBrowser oet = new UMLSBrowser(GUI.utsUser, new String(GUI.utsPass));
         rulesets = new ConcurrentHashMap<>();
+        ConcurrentHashMap<String, Set<String>> cuiSets = new ConcurrentHashMap<>();
         SwingWorker<Void, Object> worker = new SwingWorker<Void, Object>() {
             @Override
             protected Void doInBackground() {
@@ -74,9 +80,21 @@ public class NLPRuleSetGenerationProgress extends JDialog {
                                         }
                                     }
                             );
+                            cuiSets.computeIfAbsent(id, k -> ConcurrentHashMap.newKeySet())
+                                    .addAll(vals.stream()
+                                            .filter(c -> c.getCodeSystem().equals(VSACCodeSystem.UMLS))
+                                            .map(CodifiedValueSetElement::getCode).collect(Collectors.toSet())
+                                    );
                         }
+
                         rulesets.put(id, displayNames);
                     });
+                    ObjectWriter ow = new ObjectMapper().writerWithDefaultPrettyPrinter();
+                    try {
+                        ow.writeValue(new File("cui_mappings.json"), cuiSets);
+                    } catch (Throwable t) {
+                        t.printStackTrace();
+                    }
                     synchronized (GUI.nextPhaseFlag) {
                         GUI.nextPhaseFlag.set(true);
                         GUI.nextPhaseFlag.notifyAll();

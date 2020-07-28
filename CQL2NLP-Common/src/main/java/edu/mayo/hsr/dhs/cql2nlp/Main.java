@@ -29,7 +29,7 @@ public class Main {
                     vals = oet.getCUIsForValueSetElement(element, true);
                 } catch (JsonProcessingException e) {
                     e.printStackTrace();
-                    return;
+                    continue;
                 }
                 vals.parallelStream().forEach(
                         val -> {
