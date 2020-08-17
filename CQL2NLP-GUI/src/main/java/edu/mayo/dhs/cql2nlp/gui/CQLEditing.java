@@ -23,6 +23,7 @@ public class CQLEditing extends JDialog {
     private JList<String> valueSetList;
     private JButton submitButton;
     private JPanel cqlPane;
+    private JButton refreshButton;
 
     public CQLEditing() {
         setContentPane(cqlPane);
@@ -44,49 +45,49 @@ public class CQLEditing extends JDialog {
         }, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
 
         CQLParser parser = new CQLParser();
-        this.cqlInput.getDocument().addDocumentListener(new DocumentListener() {
-            @Override
-            public void insertUpdate(DocumentEvent e) {
-                try {
-                    Set<String> keys = parser.getValueSets(e.getDocument().getText(0, e.getDocument().getLength())).keySet();
-                    String[] arr = keys.toArray(new String[0]);
-                    Arrays.sort(arr);
-                    valueSetList.setListData(arr);
-                    submitButton.setEnabled(true);
-                } catch (BadLocationException | IOException t) {
-                    valueSetList.setListData(new String[]{"Invalid CQL"});
-                    submitButton.setEnabled(false);
-                }
-            }
-
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                try {
-                    Set<String> keys = parser.getValueSets(e.getDocument().getText(0, e.getDocument().getLength())).keySet();
-                    String[] arr = keys.toArray(new String[0]);
-                    Arrays.sort(arr);
-                    valueSetList.setListData(arr);
-                    submitButton.setEnabled(true);
-                } catch (BadLocationException | IOException t) {
-                    valueSetList.setListData(new String[]{"Invalid CQL"});
-                    submitButton.setEnabled(false);
-                }
-            }
-
-            @Override
-            public void changedUpdate(DocumentEvent e) {
-                try {
-                    Set<String> keys = parser.getValueSets(e.getDocument().getText(0, e.getDocument().getLength())).keySet();
-                    String[] arr = keys.toArray(new String[0]);
-                    Arrays.sort(arr);
-                    valueSetList.setListData(arr);
-                    submitButton.setEnabled(true);
-                } catch (BadLocationException | IOException t) {
-                    valueSetList.setListData(new String[]{"Invalid CQL"});
-                    submitButton.setEnabled(false);
-                }
-            }
-        });
+//        this.cqlInput.getDocument().addDocumentListener(new DocumentListener() {
+//            @Override
+//            public void insertUpdate(DocumentEvent e) {
+//                try {
+//                    Set<String> keys = parser.getValueSets(e.getDocument().getText(0, e.getDocument().getLength())).keySet();
+//                    String[] arr = keys.toArray(new String[0]);
+//                    Arrays.sort(arr);
+//                    valueSetList.setListData(arr);
+//                    submitButton.setEnabled(true);
+//                } catch (BadLocationException | IOException t) {
+//                    valueSetList.setListData(new String[]{"Invalid CQL"});
+//                    submitButton.setEnabled(false);
+//                }
+//            }
+//
+//            @Override
+//            public void removeUpdate(DocumentEvent e) {
+//                try {
+//                    Set<String> keys = parser.getValueSets(e.getDocument().getText(0, e.getDocument().getLength())).keySet();
+//                    String[] arr = keys.toArray(new String[0]);
+//                    Arrays.sort(arr);
+//                    valueSetList.setListData(arr);
+//                    submitButton.setEnabled(true);
+//                } catch (BadLocationException | IOException t) {
+//                    valueSetList.setListData(new String[]{"Invalid CQL"});
+//                    submitButton.setEnabled(false);
+//                }
+//            }
+//
+//            @Override
+//            public void changedUpdate(DocumentEvent e) {
+//                try {
+//                    Set<String> keys = parser.getValueSets(e.getDocument().getText(0, e.getDocument().getLength())).keySet();
+//                    String[] arr = keys.toArray(new String[0]);
+//                    Arrays.sort(arr);
+//                    valueSetList.setListData(arr);
+//                    submitButton.setEnabled(true);
+//                } catch (BadLocationException | IOException t) {
+//                    valueSetList.setListData(new String[]{"Invalid CQL"});
+//                    submitButton.setEnabled(false);
+//                }
+//            }
+//        });
         submitButton.addActionListener(e -> {
             List<String> toKeep = valueSetList.getSelectedValuesList();
             try {
@@ -101,6 +102,21 @@ public class CQLEditing extends JDialog {
             } catch (IOException | BadLocationException ex) {
                 ex.printStackTrace();
                 JOptionPane.showMessageDialog(null, "An error occurred, please check your console");
+            }
+        });
+        refreshButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    Set<String> keys = parser.getValueSets(cqlInput.getDocument().getText(0, cqlInput.getDocument().getLength())).keySet();
+                    String[] arr = keys.toArray(new String[0]);
+                    Arrays.sort(arr);
+                    valueSetList.setListData(arr);
+                    submitButton.setEnabled(true);
+                } catch (BadLocationException | IOException t) {
+                    valueSetList.setListData(new String[]{"Invalid CQL"});
+                    submitButton.setEnabled(false);
+                }
             }
         });
     }

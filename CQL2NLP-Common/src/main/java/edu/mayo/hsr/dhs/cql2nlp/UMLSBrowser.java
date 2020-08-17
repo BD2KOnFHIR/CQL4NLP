@@ -46,7 +46,11 @@ public class UMLSBrowser {
                     .build(new CacheLoader<String, Set<String>>() {
                         @Override
                         public Set<String> load(String cui) throws Exception {
-                            return resolveDisplayNamesForCUI(cui);
+                            try {
+                                return resolveDisplayNamesForCUI(cui);
+                            } catch (Throwable t) {
+                                return Collections.emptySet();
+                            }
                         }
                     });
 
@@ -130,7 +134,7 @@ public class UMLSBrowser {
     public Set<String> getDisplayNamesForCUI(String cui) throws JsonProcessingException {
         try {
             return displayNameCache.get(cui);
-        } catch (ExecutionException e) {
+        } catch (Throwable e) {
             return Collections.emptySet();
         }
     }

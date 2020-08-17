@@ -81,11 +81,14 @@
           <text value="Submit"/>
         </properties>
       </component>
-      <hspacer id="1a28a">
+      <component id="64346" class="javax.swing.JButton" binding="refreshButton">
         <constraints>
-          <grid row="2" column="0" row-span="1" col-span="2" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+          <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
         </constraints>
-      </hspacer>
+        <properties>
+          <text value="⟳"/>
+        </properties>
+      </component>
     </children>
   </grid>
 </form>

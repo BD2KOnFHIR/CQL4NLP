@@ -17,10 +17,8 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
@@ -60,34 +58,38 @@ public class NLPRuleSetGenerationProgress extends JDialog {
             protected Void doInBackground() {
                 try {
                     CQLEditing.valueSetsToResolve.forEach((id, oid) -> {
-                        ValueSet vs = rls.getValueSetForOID(oid);
-                        Set<CodifiedValueSetElement> codes = rls.resolveValueSetCodes(vs);
-                        Set<String> displayNames = ConcurrentHashMap.newKeySet();
-                        for (CodifiedValueSetElement element : codes) {
-                            Set<CodifiedValueSetElement> vals = null;
-                            try {
-                                vals = oet.getCUIsForValueSetElement(element, true);
-                            } catch (JsonProcessingException e) {
-                                e.printStackTrace();
-                                return;
-                            }
-                            vals.parallelStream().forEach(
-                                    val -> {
-                                        try {
-                                            displayNames.addAll(oet.getDisplayNamesForCUI(val.getCode()));
-                                        } catch (JsonProcessingException e) {
-                                            e.printStackTrace();
+                        try {
+                            ValueSet vs = rls.getValueSetForOID(oid);
+                            Set<CodifiedValueSetElement> codes = rls.resolveValueSetCodes(vs);
+                            Set<String> displayNames = ConcurrentHashMap.newKeySet();
+                            for (CodifiedValueSetElement element : codes) {
+                                Set<CodifiedValueSetElement> vals = null;
+                                try {
+                                    vals = oet.getCUIsForValueSetElement(element, true);
+                                } catch (JsonProcessingException e) {
+                                    e.printStackTrace();
+                                    continue;
+                                }
+                                new ArrayList<>(vals).parallelStream().forEach(
+                                        val -> {
+                                            try {
+                                                oet.getDisplayNamesForCUI(val.getCode()).stream().map(s -> val.getCode() + "|" + s).forEach(displayNames::add);
+                                            } catch (JsonProcessingException e) {
+                                                e.printStackTrace();
+                                            }
                                         }
-                                    }
-                            );
-                            cuiSets.computeIfAbsent(id, k -> ConcurrentHashMap.newKeySet())
-                                    .addAll(vals.stream()
-                                            .filter(c -> c.getCodeSystem().equals(VSACCodeSystem.UMLS))
-                                            .map(CodifiedValueSetElement::getCode).collect(Collectors.toSet())
-                                    );
-                        }
+                                );
+                                cuiSets.computeIfAbsent(id, k -> ConcurrentHashMap.newKeySet())
+                                        .addAll(vals.stream()
+                                                .filter(c -> c.getCodeSystem().equals(VSACCodeSystem.UMLS))
+                                                .map(CodifiedValueSetElement::getCode).collect(Collectors.toSet())
+                                        );
+                            }
 
-                        rulesets.put(id, displayNames);
+                            rulesets.put(id, displayNames);
+                        } catch (Throwable t) {
+                            t.printStackTrace();
+                        }
                     });
                     ObjectWriter ow = new ObjectMapper().writerWithDefaultPrettyPrinter();
                     try {
